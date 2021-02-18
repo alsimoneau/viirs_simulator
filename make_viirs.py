@@ -5,15 +5,34 @@ import MultiScaleData as MSD
 from glob import glob
 import yaml
 
+
 with open('Inputs/lamps.lst') as f:
     lamps = f.read().split()
+
+
+with open('domain.ini') as f:
+    p = yaml.safe_load(f)
+ymin = p['extents'][0]['ymin']
+ymax = p['extents'][0]['ymax']
+scale_min = np.deg2rad(p['scale_min']) # angle deg
+
+arr = np.linspace(ymax, ymin, 84)
+arr = (arr[1:] + arr[:-1]) / 2  # Trouver le point millieu
+lat = np.zeros((83, 83))
+lat[:] = arr[:, None]
+
+
+R = 637813700  # Rayon de la terre (cm)
+dx = scale_min * R * np.cos(np.deg2rad(lat))
+dy = scale_min * R
+S = dx*dy
+
 
 with open("inputs_params.in") as f:
     p = yaml.safe_load(f)
 alpha = p['angstrom_coefficient']
 AOD = p['aerosol_optical_depth']
 wav = np.loadtxt("Inputs/wav.lst")
-
 refl = np.loadtxt('Inputs/refl.lst')
 
 lims = np.loadtxt("Inputs/integration_limits.dat",skiprows=1)
@@ -53,10 +72,11 @@ for lamp in lamps:
 
     lumlp = MSD.Open(f'Inputs/PMB_690_lumlp_{lamp}.hdf5')
     phi = lumlp[0]*(lims[1]-lims[0]) * 1e9
-    S = (lumlp.pixel_size(0)*100)**2
     DNB = phi/S * R * A
 
     # Somme sur les lampes
     viirs_lamps.append(DNB)
 
+
 sim_viirs = np.sum(viirs_lamps,0)
+np.save('sim_viirs', sim_viirs)
