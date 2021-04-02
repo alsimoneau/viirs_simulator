@@ -40,7 +40,7 @@ wl,viirs = np.loadtxt('Lights/viirs.dat',skiprows=1).T
 band = (wl>=lims[0]) & (wl<lims[1])
 R = np.sum(viirs[band]) * (wl[1] - wl[0]) / (lims[1] - lims[0])
 
-T_m = np.exp( -1 / ( wav**4 * (115.6406 - 1.335/wav**2) ) )
+T_m = np.exp( -1 / ( (wav/1000)**4 * (115.6406 - 1.335/(wav/1000)**2) ) )
 T_a = np.exp( -AOD * (wav/500)**(-alpha) )
 
 altlp = MSD.Open("Inputs/PMB_altlp.hdf5")[0]
